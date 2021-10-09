@@ -8,6 +8,9 @@ $ npm start
 ## install web3 in project folder
 $ npm install web3
 
+## Install ethers in project folder
+$npm install --save ethers
+
 
 
 

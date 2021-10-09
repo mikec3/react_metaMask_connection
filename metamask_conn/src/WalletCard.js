@@ -1,7 +1,7 @@
 // https://docs.metamask.io/guide/ethereum-provider.html#using-the-provider
 
 import React, {useState} from 'react'
-import Web3 from 'web3'
+import {ethers} from 'ethers'
 import './WalletCard.css'
 
 const WalletCard = () => {
@@ -17,10 +17,12 @@ const WalletCard = () => {
 
 			window.ethereum.request({ method: 'eth_requestAccounts'})
 			.then(result => {
-				window.web3 = new Web3(window.ethereum);
 				accountChangedHandler(result[0]);
 				setConnButtonText('Wallet Connected');
 				getAccountBalance(result[0]);
+			})
+			.catch(error => {
+				setErrorMessage(error);
 			});
 
 		} else {
@@ -31,22 +33,34 @@ const WalletCard = () => {
 
 	// update account, will cause component re-render
 	const accountChangedHandler = (newAccount) => {
-		console.log('Account Changed');
 		setDefaultAccount(newAccount);
+		getAccountBalance(newAccount.toString());
 	}
 
 	const getAccountBalance = (account) => {
 		window.ethereum.request({method: 'eth_getBalance', params: [account, 'latest']})
 		.then(balance => {
-			setUserBalance(window.web3.utils.fromWei(balance));
+			setUserBalance(ethers.utils.formatEther(balance));
+		})
+		.catch(error => {
+			setErrorMessage(error);
 		});
 	};
 
+	const chainChangedHandler = () => {
+		// reload the page to avoid any errors with chain change mid use of application
+		window.location.reload();
+	}
+
+
 	// listen for account changes
 	window.ethereum.on('accountsChanged', accountChangedHandler);
+
+	window.ethereum.on('chainChanged', chainChangedHandler);
 	
 	return (
 		<div className='walletCard'>
+		<h4> {"Connection to MetaMask using window.ethereum methods"} </h4>
 			<button onClick={connectWalletHandler}>{connButtonText}</button>
 			<div className='accountDisplay'>
 				<h3>Address: {defaultAccount}</h3>
